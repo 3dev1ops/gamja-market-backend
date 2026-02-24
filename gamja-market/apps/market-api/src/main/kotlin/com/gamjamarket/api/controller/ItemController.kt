@@ -6,6 +6,7 @@ import com.gamjamarket.api.dto.response.ItemDetailResponse
 import com.gamjamarket.api.dto.response.ItemSummaryResponse
 import com.gamjamarket.api.service.ItemService
 import com.gamjamarket.api.dto.request.ItemUpdateRequest
+import com.gamjamarket.utils.response.ApiResponse
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
@@ -32,25 +33,29 @@ class ItemController(
     fun createItem(
         @RequestHeader("X-Seller-Id")sellerId: UUID,
         @RequestBody request: ItemCreateRequest
-    ): ResponseEntity<ItemCreateResponse> {
+    ): ResponseEntity<ApiResponse<ItemCreateResponse>> {
         val response = itemService.createItem(sellerId, request)
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(response)
+        return ResponseEntity.ok(
+            ApiResponse.success(response, "상품이 성공적으로 등록되었습니다.")
+        )
     }
 
     // 페이지 사이즈는 임의로 20으로 둠
     @GetMapping
     fun getItems(
         @PageableDefault(size = 20, sort = ["createdAt"], direction = Sort.Direction.DESC) pageable: Pageable
-    ): ResponseEntity<Page<ItemSummaryResponse>> {
+    ): ResponseEntity<ApiResponse<Page<ItemSummaryResponse>>> {
         val response = itemService.getItems(pageable)
-        return ResponseEntity.ok(response)
+        return ResponseEntity.ok(ApiResponse.success(response))
     }
 
     @GetMapping("/{id}")
-    fun getItem(@PathVariable id: Long): ResponseEntity<ItemDetailResponse> {
+    fun getItem(@PathVariable id: Long): ResponseEntity<ApiResponse<ItemDetailResponse>> {
         val response = itemService.getItemDetail(id)
-        return ResponseEntity.ok(response)
+        return ResponseEntity.ok(
+            ApiResponse.success(response)
+        )
     }
 
     @PatchMapping("/{itemId}")
@@ -58,18 +63,22 @@ class ItemController(
         @PathVariable itemId: Long,
         @RequestHeader("X-Seller-Id")sellerId: UUID,
         @RequestBody request: ItemUpdateRequest
-    ): ResponseEntity<ItemDetailResponse> {
-        val updateItem = itemService.updateItem(itemId, sellerId, request)
+    ): ResponseEntity<ApiResponse<ItemDetailResponse>> {
+        val response = itemService.updateItem(itemId, sellerId, request)
 
-        return ResponseEntity.ok(updateItem)
+        return ResponseEntity.ok(
+            ApiResponse.success(response, "상품 정보가 성공적으로 수정되었습니다.")
+        )
     }
 
     @DeleteMapping("/{itemId}")
     fun deleteItem(
         @PathVariable itemId: Long,
         @RequestHeader("X-Seller-Id")sellerId: UUID
-    ): ResponseEntity<Unit> {
+    ): ResponseEntity<ApiResponse<Nothing>> {
         itemService.deleteItem(itemId, sellerId)
-        return ResponseEntity.noContent().build()
+        return ResponseEntity.ok(
+            ApiResponse.successWithNoData("상품이 성공적으로 삭제되었습니다.")
+        )
     }
 }
