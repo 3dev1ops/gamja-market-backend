@@ -1,6 +1,6 @@
 package com.gamjamarket.api.dto.response
 
-import com.gamjamarket.domain.AuctionStatus
+import com.gamjamarket.domain.enums.AuctionStatus
 import java.time.LocalDateTime
 import java.util.UUID
 

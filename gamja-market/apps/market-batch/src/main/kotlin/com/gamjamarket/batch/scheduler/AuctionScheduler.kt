@@ -1,6 +1,6 @@
 package com.gamjamarket.batch.scheduler
 
-import com.gamjamarket.domain.AuctionStatus
+import com.gamjamarket.domain.enums.AuctionStatus
 import com.gamjamarket.repository.AuctionRepository
 import com.gamjamarket.repository.BidRepository
 import org.slf4j.LoggerFactory

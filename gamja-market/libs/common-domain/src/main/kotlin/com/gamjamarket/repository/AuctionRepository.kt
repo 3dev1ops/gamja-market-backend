@@ -1,7 +1,7 @@
 package com.gamjamarket.repository
 
 import com.gamjamarket.domain.Auction
-import com.gamjamarket.domain.AuctionStatus
+import com.gamjamarket.domain.enums.AuctionStatus
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query

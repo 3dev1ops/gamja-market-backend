@@ -1,6 +1,7 @@
 package com.gamjamarket.domain
 
 import com.gamjamarket.domain.common.BaseTimeEntity
+import com.gamjamarket.domain.enums.ItemCondition
 import jakarta.persistence.*
 import org.hibernate.annotations.SQLDelete
 import org.hibernate.annotations.SQLRestriction
@@ -78,6 +79,3 @@ class Item (
     }
 }
 
-enum class ItemCondition {
-    S, A, B, C
-}

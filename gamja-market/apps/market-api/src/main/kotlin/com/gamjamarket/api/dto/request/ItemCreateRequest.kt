@@ -1,6 +1,6 @@
 package com.gamjamarket.api.dto.request
 
-import com.gamjamarket.domain.ItemCondition
+import com.gamjamarket.domain.enums.ItemCondition
 import java.time.LocalDateTime
 
 data class ItemCreateRequest(

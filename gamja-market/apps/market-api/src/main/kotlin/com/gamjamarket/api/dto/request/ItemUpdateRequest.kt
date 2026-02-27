@@ -1,6 +1,7 @@
 package com.gamjamarket.api.dto.request
 
-import com.gamjamarket.domain.ItemCondition
+import com.gamjamarket.domain.enums.ItemCondition
+
 
 data class ItemUpdateRequest(
     val title: String?,

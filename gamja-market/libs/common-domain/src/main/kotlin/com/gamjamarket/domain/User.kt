@@ -1,6 +1,7 @@
 package com.gamjamarket.domain
 
 import com.gamjamarket.domain.common.BaseTimeEntity
+import com.gamjamarket.domain.enums.UserStatus
 import jakarta.persistence.*
 import java.time.LocalDateTime
 import java.util.UUID
@@ -32,6 +33,4 @@ class User(
     var deletedAt: LocalDateTime? = null,
 ) : BaseTimeEntity()
 
-enum class UserStatus {
-    ACTIVE, SUSPENDED, DELETED
-}
+

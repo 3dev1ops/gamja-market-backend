@@ -1,8 +1,8 @@
 package com.gamjamarket.api.dto.response
 
-import com.gamjamarket.domain.AuctionStatus
 import com.gamjamarket.domain.Item
-import com.gamjamarket.domain.ItemCondition
+import com.gamjamarket.domain.enums.AuctionStatus
+import com.gamjamarket.domain.enums.ItemCondition
 import java.time.LocalDateTime
 
 data class ItemDetailResponse(
