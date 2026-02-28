@@ -20,6 +20,12 @@ interface BidRepository : JpaRepository<Bid, Long> {
     // 해당 경매 ID를 가진 입찰이 존재하는지 여부만 확인 (count보다 빠름)
     fun existsByAuctionId(auctionId: Long): Boolean
 
+    // 스케줄러 용
     @Query("SELECT DISTINCT b.auction.id FROM Bid b WHERE b.auction.id IN : auctionIds")
     fun findAuctionIdsWithBidsIn(@Param("auctionIds")auctionIds: List<Long>): List<Long>
+
+
+    // 알림 발송용
+    @Query("SELECT DISTINCT b.bidder.id FROM Bid b WHERE b.auction.id = :auctionId")
+    fun findDistinctBidderIdsByAuctionId(@Param("auctionId")auctionId: Long): List<UUID>
 }

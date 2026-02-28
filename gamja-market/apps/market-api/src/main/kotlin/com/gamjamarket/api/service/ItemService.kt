@@ -6,9 +6,10 @@ import com.gamjamarket.api.dto.response.ItemCreateResponse
 import com.gamjamarket.api.dto.response.ItemDetailResponse
 import com.gamjamarket.api.dto.response.ItemSummaryResponse
 import com.gamjamarket.domain.Auction
-import com.gamjamarket.domain.AuctionStatus
 import com.gamjamarket.domain.Item
 import com.gamjamarket.domain.ItemImage
+import com.gamjamarket.domain.enums.AuctionStatus
+import com.gamjamarket.domain.enums.CancelReason
 import com.gamjamarket.repository.AuctionRepository
 import com.gamjamarket.repository.BidRepository
 import com.gamjamarket.repository.CategoryRepository
@@ -169,7 +170,7 @@ class ItemService(
     }
 
     @Transactional
-    fun deleteItem(itemId: Long, sellerId: UUID) {
+    fun deleteItem(itemId: Long, sellerId: UUID, reason: CancelReason) {
         val item = itemRepository.findById(itemId)
             .orElseThrow { IllegalArgumentException("상품을 찾을 수 없습니다.") }
 
@@ -178,11 +179,35 @@ class ItemService(
         }
 
         item.auction?.let { auction ->
-            if (bidRepository.existsByAuctionId(auction.id!!)) {
-                throw IllegalStateException("이미 입찰이 진행된 상품은 삭제할 수 없습니다.")
+            val now = LocalDateTime.now()
+
+            // 1. 경매 종료 1시간 전(또는 이미 종료된 후)에는 무조건 삭제 불가
+            if (now.isAfter(auction.endAt.minusHours(1))) {
+                throw IllegalStateException("경매 마감 1시간 전부터는 상품을 삭제할 수 없습니다.")
+            }
+
+            // 2. 입찰자가 있는지 확인
+            val hasBids = bidRepository.existsByAuctionId(auction.id!!)
+
+            if (hasBids) {
+                // [패널티 부여]입찰자가 있는데 단순 변심으로 취소하는 경우
+                if (reason == CancelReason.SIMPLE_CHANGE_OF_MIND) {
+                    val seller = item.seller
+                    // TODO: User 엔터티에 신뢰도(매너 온도)를 깎는 메서드 구현 필요
+                }
+
+                // [알림 발송] 해당 경매에 입찰했던 유저들의 ID 목록 조회
+                val bidderIds = bidRepository.findDistinctBidderIdsByAuctionId(auction.id!!)
+
+                for (bidderId in bidderIds) {
+                    // TODO: NotificationService 등을 통해 알림 발송
+                }
+
+                auction.auctionStatus = AuctionStatus.CANCELLED
             }
         }
 
-        itemRepository.delete(item)
+        // 3. 상품 삭제 처리 (Soft Delete)
+        item.isDeleted = true
     }
 }
