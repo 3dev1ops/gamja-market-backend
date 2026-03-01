@@ -46,13 +46,24 @@ class ItemService(
         val now = LocalDateTime.now()
         val actualStartAt = request.startAt ?: now
 
+        if (actualStartAt.isBefore(now)) {
+            throw IllegalArgumentException("경매 시작 시간은 현재 시간 이후여야 합니다.")
+        }
+
+        // 2. 경매 시작 시간이 일주일 이내인지 검증
+        val maxStartTime = now.plusDays(7)
+        if (actualStartAt.isAfter(maxStartTime)) {
+            throw IllegalArgumentException("경매 시작 시간은 등록일로부터 최대 일주일 이내로만 설정할 수 있습니다.")
+        }
+
+        // AuctionStatus 설정
         val initialStatus = if (actualStartAt.isAfter(now)) {
             AuctionStatus.BEFORE_START
         } else {
             AuctionStatus.ON_GOING
         }
 
-        // 2. Item 저장
+        // 3. Item 저장
         val item = itemRepository.save(
             Item(
                 seller = seller,
@@ -63,7 +74,7 @@ class ItemService(
             )
         )
 
-        // 3. auction 정보 저장
+        // 4. auction 정보 저장
         val auction = auctionRepository.save(
             Auction(
                 item = item,
@@ -75,7 +86,7 @@ class ItemService(
             )
         )
 
-        // 4. 이미지 정보 저장
+        // 5. 이미지 정보 저장
         request.imageUrls.forEachIndexed { index, url ->
             itemImageRepository.save(
                 ItemImage(
