@@ -41,5 +41,8 @@ bin/
 ### Mac OS ###
 .DS_Store
 
+### Claude Code ###
+.claude/
+
 **/src/main/resources/application.yml
 
