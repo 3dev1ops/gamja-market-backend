@@ -34,7 +34,7 @@ class BidService(
             }
         }
 
-        val auction = auctionRepository.findByIdWIthPessimisticLock(auctionId)
+        val auction = auctionRepository.findByIdWithItemAndSellerForUpdate(auctionId)
             ?: throw IllegalArgumentException("경매를 찾을 수 없습니다.")
 
         if (auction.item.seller.id == bidderId) {
@@ -82,7 +82,7 @@ class BidService(
             throw IllegalArgumentException("존재하지 않는 경매입니다.")
         }
 
-        val bidPage = bidRepository.findByAuctionId(auctionId, pageable)
+        val bidPage = bidRepository.findByAuctionIdWithBidder(auctionId, pageable)
 
         return bidPage.map { bid ->
             BidHistoryResponse(

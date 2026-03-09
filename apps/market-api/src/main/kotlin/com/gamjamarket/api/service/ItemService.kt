@@ -120,7 +120,7 @@ class ItemService(
 
     @Transactional
     fun getItems(pageable: Pageable): Page<ItemSummaryResponse> {
-        return itemRepository.findAll(pageable).map { item ->
+        return itemRepository.findAllWithAuction(pageable).map { item ->
             val auction = item.auction ?: throw IllegalStateException("경매 정보가 없는 상품입니다.")
 
             ItemSummaryResponse(
@@ -140,8 +140,8 @@ class ItemService(
         val viewCountKey = "item:view_count:$itemId"
         redisTemplate.opsForValue().increment(viewCountKey)
 
-        val item = itemRepository.findById(itemId)
-            .orElseThrow { IllegalArgumentException("해당 상품을 찾을 수 없습니다. (ID: $itemId)") }
+        val item = itemRepository.findByIdWithDetails(itemId)
+            ?: throw IllegalArgumentException("해당 상품을 찾을 수 없습니다. (ID: $itemId)")
 
         val currentRedisView = redisTemplate.opsForValue().get(viewCountKey)?.toInt() ?: 0
 
