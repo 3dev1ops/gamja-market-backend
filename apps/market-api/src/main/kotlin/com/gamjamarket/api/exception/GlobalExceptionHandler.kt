@@ -11,18 +11,18 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 @RestControllerAdvice
 class GlobalExceptionHandler {
 
-    // 1. 직접 만든 BusinessException을 가로채는 곳
+    // 1. BusinessException — ResultCode에 따라 HTTP 상태코드 매핑
     @ExceptionHandler(BusinessException::class)
     fun handleBusinessException(e: BusinessException): ResponseEntity<ApiResponse<Nothing>> {
         val response = ApiResponse.error(e.resultCode, e.message)
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response)
-    }
-
-    // 2. 기본 예외 처리
-    @ExceptionHandler(IllegalArgumentException::class)
-    fun handleIllegalArgumentException(e: IllegalArgumentException): ResponseEntity<ApiResponse<Nothing>> {
-        val response = ApiResponse.error(ResultCode.BAD_REQUEST, e.message)
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response)
+        val status = when (e.resultCode) {
+            ResultCode.NOT_FOUND -> HttpStatus.NOT_FOUND
+            ResultCode.UNAUTHORIZED -> HttpStatus.UNAUTHORIZED
+            ResultCode.FORBIDDEN -> HttpStatus.FORBIDDEN
+            ResultCode.INTERNAL_ERROR -> HttpStatus.INTERNAL_SERVER_ERROR
+            else -> HttpStatus.BAD_REQUEST
+        }
+        return ResponseEntity.status(status).body(response)
     }
 
     // 3. 그 외에 예상치 못한 모든 서버 에러

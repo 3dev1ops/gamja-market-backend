@@ -6,10 +6,11 @@ import com.gamjamarket.domain.Bid
 import com.gamjamarket.repository.AuctionRepository
 import com.gamjamarket.repository.BidRepository
 import com.gamjamarket.repository.UserRepository
+import com.gamjamarket.utils.exception.BusinessException
+import com.gamjamarket.utils.response.ResultCode
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.redis.core.RedisTemplate
-import org.springframework.data.redis.core.script.DefaultRedisScript
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
@@ -30,31 +31,31 @@ class BidService(
         if (cachedHighestPriceStr != null) {
             val cachedHighestPrice = cachedHighestPriceStr.toLong()
             if (bidPrice <= cachedHighestPrice) {
-                throw IllegalArgumentException("현재 최고 입찰가(${cachedHighestPrice}원) 보다 높은 금액을 제시해야 합니다.")
+                throw BusinessException(ResultCode.BID_LOWER_THAN_HIGHEST, "현재 최고 입찰가(${cachedHighestPrice}원) 보다 높은 금액을 제시해야 합니다.")
             }
         }
 
         val auction = auctionRepository.findByIdWithItemAndSellerForUpdate(auctionId)
-            ?: throw IllegalArgumentException("경매를 찾을 수 없습니다.")
+            ?: throw BusinessException(ResultCode.AUCTION_NOT_FOUND)
 
         if (auction.item.seller.id == bidderId) {
-            throw IllegalArgumentException("자신의 상품에는 입찰할 수 없습니다.")
+            throw BusinessException(ResultCode.BID_OWN_ITEM)
         }
 
         val now = LocalDateTime.now()
         if (auction.endAt.isBefore(now)) {
-            throw IllegalStateException("이미 종료된 경매입니다.")
+            throw BusinessException(ResultCode.AUCTION_ALREADY_ENDED)
         }
 
         if (bidPrice < auction.startPrice) {
-            throw IllegalArgumentException("입찰 금액은 시작가(${auction.startPrice}원) 이상이어야 합니다.")
+            throw BusinessException(ResultCode.BID_LOWER_THAN_START_PRICE, "입찰 금액은 시작가(${auction.startPrice}원) 이상이어야 합니다.")
         }
 
         val highestBid = bidRepository.findTopByAuctionIdOrderByBidPriceDesc(auctionId)
         val actualHighestPrice = highestBid?.bidPrice ?: auction.startPrice
 
         if (bidPrice <= actualHighestPrice) {
-            throw IllegalArgumentException("현재 최고 입찰가(${actualHighestPrice}원)보다 높은 금액을 제시해야 합니다.")
+            throw BusinessException(ResultCode.BID_LOWER_THAN_HIGHEST, "현재 최고 입찰가(${actualHighestPrice}원)보다 높은 금액을 제시해야 합니다.")
         }
 
         val bidderProxy = userRepository.getReferenceById(bidderId)
@@ -79,7 +80,7 @@ class BidService(
     fun getBidHistory(auctionId: Long, pageable: Pageable): Page<BidHistoryResponse> {
 
         if (!auctionRepository.existsById(auctionId)) {
-            throw IllegalArgumentException("존재하지 않는 경매입니다.")
+            throw BusinessException(ResultCode.AUCTION_NOT_FOUND)
         }
 
         val bidPage = bidRepository.findByAuctionIdWithBidder(auctionId, pageable)
