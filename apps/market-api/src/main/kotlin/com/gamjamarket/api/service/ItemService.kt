@@ -18,7 +18,7 @@ import com.gamjamarket.repository.ItemRepository
 import com.gamjamarket.repository.UserRepository
 import com.gamjamarket.utils.exception.BusinessException
 import com.gamjamarket.utils.response.ResultCode
-import jakarta.transaction.Transactional
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.redis.core.StringRedisTemplate
