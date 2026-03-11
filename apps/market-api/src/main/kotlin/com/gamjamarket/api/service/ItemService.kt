@@ -100,16 +100,15 @@ class ItemService(
         )
 
         // 5. 이미지 정보 저장
-        request.imageUrls.forEachIndexed { index, url ->
-            itemImageRepository.save(
-                ItemImage(
-                    item = item,
-                    imageUrl = url,
-                    sortOrder = index,
-                    isThumbnail = index == 0
-                )
+        val images = request.imageUrls.mapIndexed { index, url ->
+            ItemImage(
+                item = item,
+                imageUrl = url,
+                sortOrder = index,
+                isThumbnail = index == 0
             )
         }
+        itemImageRepository.saveAll(images)
         return ItemCreateResponse(
             id = item.id ?: throw BusinessException(ResultCode.INTERNAL_ERROR, "상품 ID 생성 실패"),
             title = item.title,
