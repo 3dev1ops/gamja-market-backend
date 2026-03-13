@@ -27,7 +27,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 @Service
-@Transactional
+@Transactional(readOnly = true)
 class ItemService(
     private val itemRepository: ItemRepository,
     private val auctionRepository: AuctionRepository,
@@ -37,6 +37,7 @@ class ItemService(
     private val bidRepository: BidRepository,
     private val redisTemplate: StringRedisTemplate
 ) {
+    @Transactional
     fun createItem(sellerId: UUID, request: ItemCreateRequest) : ItemCreateResponse {
         // 1. 판매자, 카테고리 조회
         val seller = userRepository.findById(sellerId)
@@ -119,7 +120,6 @@ class ItemService(
         )
     }
 
-    @Transactional
     fun getItems(pageable: Pageable): Page<ItemSummaryResponse> {
         return itemRepository.findAllWithAuction(pageable).map { item ->
             val auction = item.auction ?: throw BusinessException(ResultCode.AUCTION_NO_INFO)
@@ -136,21 +136,22 @@ class ItemService(
         }
     }
 
-    @Transactional
     fun getItemDetail(itemId: Long): ItemDetailResponse {
-        val viewCountKey = "item:view_count:$itemId"
-        redisTemplate.opsForValue().increment(viewCountKey)
+        val redisViewCount = incrementViewCount(itemId)
 
         val item = itemRepository.findByIdWithDetails(itemId)
             ?: throw BusinessException(ResultCode.ITEM_NOT_FOUND, "해당 상품을 찾을 수 없습니다. (ID: $itemId)")
 
-        val currentRedisView = redisTemplate.opsForValue().get(viewCountKey)?.toInt() ?: 0
-
         val response = ItemDetailResponse.from(item)
 
         return response.copy(
-            viewCount = item.viewCount + currentRedisView
+            viewCount = item.viewCount + redisViewCount
         )
+    }
+
+    private fun incrementViewCount(itemId: Long): Int {
+        val viewCountKey = "item:view_count:$itemId"
+        return redisTemplate.opsForValue().increment(viewCountKey)?.toInt() ?: 0
     }
 
     @Transactional
