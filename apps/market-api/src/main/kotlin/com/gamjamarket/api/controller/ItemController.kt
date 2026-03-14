@@ -53,9 +53,9 @@ class ItemController(
         return ResponseEntity.ok(ApiResponse.success(response))
     }
 
-    @GetMapping("/{id}")
-    fun getItem(@PathVariable id: Long): ResponseEntity<ApiResponse<ItemDetailResponse>> {
-        val response = itemService.getItemDetail(id)
+    @GetMapping("/{itemId}")
+    fun getItem(@PathVariable itemId: Long): ResponseEntity<ApiResponse<ItemDetailResponse>> {
+        val response = itemService.getItemDetail(itemId)
         return ResponseEntity.ok(
             ApiResponse.success(response)
         )
